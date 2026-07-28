@@ -21,7 +21,7 @@ export async function sendChatMessage(message: string): Promise<string> {
   return data.reply;
 }
 export async function generateCode(
-  language: "sql" | "pyspark",
+  language: "sql" | "pyspark" | "airflow",
   request: string,
   dbSchema: string
 ): Promise<string> {

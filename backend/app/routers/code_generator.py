@@ -8,7 +8,7 @@ from app.ollama_client import call_ollama
 
 router = APIRouter()
 
-Language = Literal["sql", "pyspark"]
+Language = Literal["sql", "pyspark", "airflow"]
 
 
 class CodeGenerateRequest(BaseModel):
@@ -36,9 +36,18 @@ LANGUAGE_INSTRUCTIONS: dict[Language, str] = {
         "if no schema is given). Do not include explanations, comments, "
         "or markdown code fences — just the raw Python code."
     ),
+    "airflow": (
+        "You are an Apache Airflow DAG generator. Output ONLY valid "
+        "Python code defining an Airflow DAG (using the standard "
+        "`from airflow import DAG` and operator imports, e.g. "
+        "PythonOperator or BashOperator) that satisfies the request. "
+        "Include a `default_args` dict, a DAG id, a schedule_interval, "
+        "and task dependencies using `>>`. Do not include explanations, "
+        "comments, or markdown code fences — just the raw Python code."
+    ),
 }
 
-FENCE_LANGS = {"sql": "sql", "pyspark": "python"}
+FENCE_LANGS = {"sql": "sql", "pyspark": "python", "airflow": "python"}
 
 
 def build_prompt(language: Language, user_request: str, schema: str | None) -> str:

@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { generateCode } from "@/lib/api";
 
-type Language = "sql" | "pyspark";
+type Language = "sql" | "pyspark" | "airflow";
 
 const PLACEHOLDERS: Record<Language, string> = {
   sql: "e.g. top 10 customers by total order value",
   pyspark: "e.g. filter orders over $100 and group by customer",
+  airflow: "e.g. run a daily task that extracts data from an API and loads it into Postgres",
 };
 
 export default function CodeGeneratorWindow() {
@@ -58,6 +59,7 @@ export default function CodeGeneratorWindow() {
           >
             <option value="sql">SQL</option>
             <option value="pyspark">PySpark</option>
+            <option value="airflow">Airflow DAG</option>
           </select>
         </div>
 
