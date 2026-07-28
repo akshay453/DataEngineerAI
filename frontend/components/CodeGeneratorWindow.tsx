@@ -53,7 +53,7 @@ export default function CodeGeneratorWindow() {
             Language
           </label>
           <select
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
             value={language}
             onChange={(e) => setLanguage(e.target.value as Language)}
           >
@@ -68,7 +68,7 @@ export default function CodeGeneratorWindow() {
             What do you want the code to do?
           </label>
           <input
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
             placeholder={PLACEHOLDERS[language]}
             value={request}
             onChange={(e) => setRequest(e.target.value)}
@@ -83,7 +83,7 @@ export default function CodeGeneratorWindow() {
             </span>
           </label>
           <textarea
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
             placeholder={
               "e.g.\ncustomers(id, name, signup_date)\norders(id, customer_id, amount, order_date)"
             }
@@ -96,7 +96,7 @@ export default function CodeGeneratorWindow() {
         <button
           onClick={handleGenerate}
           disabled={loading || !request.trim()}
-          className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm w-full"
+         className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm w-full"
         >
           {loading
             ? "Generating…"
@@ -117,12 +117,12 @@ export default function CodeGeneratorWindow() {
               </label>
               <button
                 onClick={handleCopy}
-                className="text-xs text-blue-400 hover:text-blue-300"
+                className="text-xs text-amber-400 hover:text-amber-300"
               >
                 {copied ? "Copied!" : "Copy"}
               </button>
             </div>
-            <pre className="bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-green-300 overflow-x-auto whitespace-pre-wrap">
+            <pre className="bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-amber-300 overflow-x-auto whitespace-pre-wrap">
               {code}
             </pre>
           </div>

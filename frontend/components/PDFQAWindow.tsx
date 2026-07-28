@@ -72,7 +72,7 @@ export default function PDFQAWindow() {
               accept=".pdf"
               onChange={handleFileChange}
               disabled={uploading}
-              className="w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:text-sm hover:file:bg-blue-500 file:cursor-pointer"
+              className="w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-600 file:text-white file:text-sm hover:file:bg-amber-500 file:cursor-pointer"
             />
             {uploading && (
               <p className="text-slate-500 text-sm mt-2">
@@ -99,7 +99,7 @@ export default function PDFQAWindow() {
                     setDoc(null);
                     setHistory([]);
                   }}
-                  className="text-xs text-blue-400 hover:text-blue-300"
+                  className="text-xs text-amber-400 hover:text-amber-300"
                 >
                   Upload different file
                 </button>
@@ -117,7 +117,7 @@ export default function PDFQAWindow() {
               {history.map((qa, i) => (
                 <div key={i} className="space-y-1">
                   <div className="flex justify-end">
-                    <div className="bg-blue-600 text-white px-3 py-2 rounded-lg max-w-[85%] text-sm">
+                    <div className="bg-amber-600 text-white px-3 py-2 rounded-lg max-w-[85%] text-sm">
                       {qa.question}
                     </div>
                   </div>
@@ -141,7 +141,7 @@ export default function PDFQAWindow() {
 
             <div className="flex gap-2">
               <input
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
                 placeholder="Ask something about this document..."
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
@@ -150,7 +150,7 @@ export default function PDFQAWindow() {
               <button
                 onClick={handleAsk}
                 disabled={asking || !question.trim()}
-                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm"
+                className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm"
               >
                 Ask
               </button>

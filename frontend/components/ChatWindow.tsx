@@ -59,7 +59,7 @@ export default function ChatWindow() {
             <div
               className={`px-3 py-2 rounded-lg max-w-[75%] text-sm ${
                 m.role === "user"
-                  ? "bg-blue-600 text-white"
+                  ? "bg-amber-600 text-white"
                   : "bg-slate-800 text-slate-100"
               }`}
             >
@@ -74,7 +74,7 @@ export default function ChatWindow() {
 
       <div className="border-t border-slate-800 p-3 flex gap-2">
         <input
-          className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
           placeholder="Ask something..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -83,7 +83,7 @@ export default function ChatWindow() {
         <button
           onClick={handleSend}
           disabled={loading}
-          className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm"
+          className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm"
         >
           Send
         </button>
