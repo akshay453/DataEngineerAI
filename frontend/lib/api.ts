@@ -95,3 +95,49 @@ export async function askCSV(
   const data = await res.json();
   return data.answer;
 }
+export type PDFUpload = {
+  filename: string;
+  page_count: number;
+  text: string;
+  truncated: boolean;
+};
+
+export async function uploadPDF(file: File): Promise<PDFUpload> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE_URL}/api/pdf/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.detail || `PDF upload failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function askPDF(
+  question: string,
+  doc: PDFUpload
+): Promise<string> {
+  const res = await fetch(`${API_BASE_URL}/api/pdf/ask`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      question,
+      text: doc.text,
+      filename: doc.filename,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.detail || `PDF question failed: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.answer;
+}

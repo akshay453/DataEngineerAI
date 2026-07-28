@@ -4,8 +4,9 @@ import { useState } from "react";
 import ChatWindow from "@/components/ChatWindow";
 import CodeGeneratorWindow from "@/components/CodeGeneratorWindow";
 import CSVQAWindow from "@/components/CSVQAWindow";
+import PDFQAWindow from "@/components/PDFQAWindow";
 
-type Mode = "chat" | "code" | "csv";
+type Mode = "chat" | "code" | "csv" | "pdf";
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("chat");
@@ -16,7 +17,7 @@ export default function Home() {
         DataEngineer AI
       </h1>
 
-      <div className="max-w-2xl mx-auto mb-4 flex gap-2">
+      <div className="max-w-2xl mx-auto mb-4 flex gap-2 flex-wrap">
         <button
           onClick={() => setMode("chat")}
           className={`px-3 py-1.5 rounded-lg text-sm ${
@@ -47,11 +48,22 @@ export default function Home() {
         >
           CSV Q&A
         </button>
+        <button
+          onClick={() => setMode("pdf")}
+          className={`px-3 py-1.5 rounded-lg text-sm ${
+            mode === "pdf"
+              ? "bg-blue-600 text-white"
+              : "bg-slate-900 text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          PDF Q&A
+        </button>
       </div>
 
       {mode === "chat" && <ChatWindow />}
       {mode === "code" && <CodeGeneratorWindow />}
       {mode === "csv" && <CSVQAWindow />}
+      {mode === "pdf" && <PDFQAWindow />}
     </main>
   );
 }
