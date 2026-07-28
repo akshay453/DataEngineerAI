@@ -20,6 +20,7 @@ export async function sendChatMessage(message: string): Promise<string> {
   const data = await res.json();
   return data.reply;
 }
+
 export async function generateCode(
   language: "sql" | "pyspark" | "airflow",
   request: string,
@@ -34,12 +35,63 @@ export async function generateCode(
       db_schema: dbSchema.trim() ? dbSchema : null,
     }),
   });
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => null);
     throw new Error(
       errorData?.detail || `Code generation failed: ${res.status}`
     );
   }
+
   const data = await res.json();
   return data.code;
+}
+
+export type CSVSummary = {
+  columns: string[];
+  dtypes: Record<string, string>;
+  row_count: number;
+  sample_rows: Record<string, string>[];
+};
+
+export async function uploadCSV(file: File): Promise<CSVSummary> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE_URL}/api/csv/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.detail || `CSV upload failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function askCSV(
+  question: string,
+  summary: CSVSummary
+): Promise<string> {
+  const res = await fetch(`${API_BASE_URL}/api/csv/ask`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      question,
+      columns: summary.columns,
+      dtypes: summary.dtypes,
+      row_count: summary.row_count,
+      sample_rows: summary.sample_rows,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.detail || `CSV question failed: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.answer;
 }

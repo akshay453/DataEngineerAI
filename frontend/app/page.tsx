@@ -3,8 +3,9 @@
 import { useState } from "react";
 import ChatWindow from "@/components/ChatWindow";
 import CodeGeneratorWindow from "@/components/CodeGeneratorWindow";
+import CSVQAWindow from "@/components/CSVQAWindow";
 
-type Mode = "chat" | "code";
+type Mode = "chat" | "code" | "csv";
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("chat");
@@ -36,9 +37,21 @@ export default function Home() {
         >
           Code Generator
         </button>
+        <button
+          onClick={() => setMode("csv")}
+          className={`px-3 py-1.5 rounded-lg text-sm ${
+            mode === "csv"
+              ? "bg-blue-600 text-white"
+              : "bg-slate-900 text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          CSV Q&A
+        </button>
       </div>
 
-      {mode === "chat" ? <ChatWindow /> : <CodeGeneratorWindow />}
+      {mode === "chat" && <ChatWindow />}
+      {mode === "code" && <CodeGeneratorWindow />}
+      {mode === "csv" && <CSVQAWindow />}
     </main>
   );
 }

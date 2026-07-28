@@ -9,7 +9,7 @@ will build on top of.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import chat, code_generator, health
+from app.routers import chat, code_generator, csv_qa, health
 
 app = FastAPI(
     title="DataEngineer AI API",
@@ -30,6 +30,7 @@ app.add_middleware(
 app.include_router(health.router, prefix="/api/health", tags=["health"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(code_generator.router, prefix="/api/code", tags=["code"])
+app.include_router(csv_qa.router, prefix="/api/csv", tags=["csv"])
 
 
 @app.get("/")
