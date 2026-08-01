@@ -140,4 +140,63 @@ export async function askPDF(
 
   const data = await res.json();
   return data.answer;
+}export type SessionType = "chat" | "code" | "csv" | "pdf";
+
+export type HistoryListItem = {
+  id: number;
+  session_type: SessionType;
+  title: string;
+  created_at: string;
+};
+
+export type HistoryDetail = {
+  id: number;
+  session_type: SessionType;
+  title: string;
+  content: Record<string, any>;
+  created_at: string;
+};
+
+export async function saveHistory(
+  sessionType: SessionType,
+  title: string,
+  content: Record<string, any>
+): Promise<HistoryDetail> {
+  const res = await fetch(`${API_BASE_URL}/api/history/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_type: sessionType, title, content }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.detail || `Save failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function listHistory(): Promise<HistoryListItem[]> {
+  const res = await fetch(`${API_BASE_URL}/api/history/`);
+  if (!res.ok) {
+    throw new Error(`Failed to load history: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function getHistoryDetail(id: number): Promise<HistoryDetail> {
+  const res = await fetch(`${API_BASE_URL}/api/history/${id}`);
+  if (!res.ok) {
+    throw new Error(`Failed to load entry: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteHistory(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/history/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to delete entry: ${res.status}`);
+  }
 }

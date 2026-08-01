@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { generateCode } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { generateCode, saveHistory, HistoryDetail } from "@/lib/api";
 
 type Language = "sql" | "pyspark" | "airflow";
 
@@ -11,7 +11,12 @@ const PLACEHOLDERS: Record<Language, string> = {
   airflow: "e.g. run a daily task that extracts data from an API and loads it into Postgres",
 };
 
-export default function CodeGeneratorWindow() {
+type Props = {
+  initialEntry?: HistoryDetail | null;
+  onSaved?: () => void;
+};
+
+export default function CodeGeneratorWindow({ initialEntry, onSaved }: Props) {
   const [language, setLanguage] = useState<Language>("sql");
   const [request, setRequest] = useState("");
   const [dbSchema, setDbSchema] = useState("");
@@ -19,6 +24,24 @@ export default function CodeGeneratorWindow() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (initialEntry && initialEntry.session_type === "code") {
+      setLanguage(initialEntry.content.language || "sql");
+      setRequest(initialEntry.content.request || "");
+      setDbSchema(initialEntry.content.dbSchema || "");
+      setCode(initialEntry.content.code || "");
+    } else {
+      setLanguage("sql");
+      setRequest("");
+      setDbSchema("");
+      setCode("");
+    }
+    setError("");
+    setSaved(false);
+  }, [initialEntry]);
 
   async function handleGenerate() {
     const text = request.trim();
@@ -28,6 +51,7 @@ export default function CodeGeneratorWindow() {
     setError("");
     setCode("");
     setCopied(false);
+    setSaved(false);
 
     try {
       const result = await generateCode(language, text, dbSchema);
@@ -45,8 +69,23 @@ export default function CodeGeneratorWindow() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function handleSave() {
+    if (!code || saving) return;
+    setSaving(true);
+    try {
+      const title = request.slice(0, 60) || `${language} snippet`;
+      await saveHistory("code", title, { language, request, dbSchema, code });
+      setSaved(true);
+      onSaved?.();
+    } catch {
+      // best-effort
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col max-w-2xl mx-auto border border-slate-800 rounded-xl overflow-hidden">
+    <div className="flex flex-col max-w-2xl border border-slate-800 rounded-xl overflow-hidden">
       <div className="p-4 space-y-4">
         <div>
           <label className="text-sm text-slate-400 mb-1 block">
@@ -96,11 +135,11 @@ export default function CodeGeneratorWindow() {
         <button
           onClick={handleGenerate}
           disabled={loading || !request.trim()}
-         className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm w-full"
+          className="bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm w-full"
         >
           {loading
             ? "Generating…"
-            : `Generate ${language === "sql" ? "SQL" : "PySpark"}`}
+            : `Generate ${language === "sql" ? "SQL" : language === "pyspark" ? "PySpark" : "Airflow DAG"}`}
         </button>
 
         {error && (
@@ -112,15 +151,22 @@ export default function CodeGeneratorWindow() {
         {code && (
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-sm text-slate-400">
-                Generated {language === "sql" ? "SQL" : "PySpark"}
-              </label>
-              <button
-                onClick={handleCopy}
-                className="text-xs text-amber-400 hover:text-amber-300"
-              >
-                {copied ? "Copied!" : "Copy"}
-              </button>
+              <label className="text-sm text-slate-400">Generated code</label>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="text-xs text-amber-400 hover:text-amber-300 disabled:opacity-50"
+                >
+                  {saved ? "Saved" : saving ? "…" : "Save"}
+                </button>
+                <button
+                  onClick={handleCopy}
+                  className="text-xs text-amber-400 hover:text-amber-300"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
             </div>
             <pre className="bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-amber-300 overflow-x-auto whitespace-pre-wrap">
               {code}

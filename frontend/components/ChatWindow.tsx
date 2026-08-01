@@ -1,17 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { sendChatMessage } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { sendChatMessage, saveHistory, HistoryDetail } from "@/lib/api";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-export default function ChatWindow() {
+type Props = {
+  initialEntry?: HistoryDetail | null;
+  onSaved?: () => void;
+};
+
+export default function ChatWindow({ initialEntry, onSaved }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (initialEntry && initialEntry.session_type === "chat") {
+      setMessages(initialEntry.content.messages || []);
+    } else {
+      setMessages([]);
+    }
+    setSaved(false);
+  }, [initialEntry]);
 
   async function handleSend() {
     const text = input.trim();
@@ -20,6 +36,7 @@ export default function ChatWindow() {
     setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setLoading(true);
+    setSaved(false);
 
     try {
       const reply = await sendChatMessage(text);
@@ -28,10 +45,7 @@ export default function ChatWindow() {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content: `⚠️ ${errorMessage}`,
-        },
+        { role: "assistant", content: `⚠️ ${errorMessage}` },
       ]);
     } finally {
       setLoading(false);
@@ -42,13 +56,28 @@ export default function ChatWindow() {
     if (e.key === "Enter") handleSend();
   }
 
+  async function handleSave() {
+    if (messages.length === 0 || saving) return;
+    setSaving(true);
+    try {
+      const firstUserMsg = messages.find((m) => m.role === "user");
+      const title = (firstUserMsg?.content || "Chat").slice(0, 60);
+      await saveHistory("chat", title, { messages });
+      setSaved(true);
+      onSaved?.();
+    } catch {
+      // best-effort; the button will just stay in its non-saved state
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col h-[80vh] max-w-2xl mx-auto border border-slate-800 rounded-xl overflow-hidden">
+    <div className="flex flex-col h-[75vh] max-w-2xl border border-slate-800 rounded-xl overflow-hidden">
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.length === 0 && (
           <p className="text-slate-500 text-sm">
-            Start the conversation below. Right now this is an echo stub —
-            the AI server gets wired in during Sprint 1.5.
+            Start the conversation below.
           </p>
         )}
         {messages.map((m, i) => (
@@ -67,9 +96,7 @@ export default function ChatWindow() {
             </div>
           </div>
         ))}
-        {loading && (
-          <div className="text-slate-500 text-sm">Thinking…</div>
-        )}
+        {loading && <div className="text-slate-500 text-sm">Thinking…</div>}
       </div>
 
       <div className="border-t border-slate-800 p-3 flex gap-2">
@@ -80,6 +107,16 @@ export default function ChatWindow() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
         />
+        {messages.length > 0 && (
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="text-slate-400 hover:text-amber-400 border border-slate-700 px-3 rounded-lg text-sm disabled:opacity-50"
+            title="Save this conversation"
+          >
+            {saved ? "Saved" : saving ? "…" : "Save"}
+          </button>
+        )}
         <button
           onClick={handleSend}
           disabled={loading}

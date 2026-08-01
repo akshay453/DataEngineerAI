@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { uploadPDF, askPDF, PDFUpload } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { uploadPDF, askPDF, saveHistory, PDFUpload, HistoryDetail } from "@/lib/api";
 
 type QA = {
   question: string;
   answer: string;
 };
 
-export default function PDFQAWindow() {
+type Props = {
+  initialEntry?: HistoryDetail | null;
+  onSaved?: () => void;
+};
+
+export default function PDFQAWindow({ initialEntry, onSaved }: Props) {
   const [doc, setDoc] = useState<PDFUpload | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -17,6 +22,19 @@ export default function PDFQAWindow() {
   const [history, setHistory] = useState<QA[]>([]);
   const [asking, setAsking] = useState(false);
   const [askError, setAskError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (initialEntry && initialEntry.session_type === "pdf") {
+      setDoc(initialEntry.content.doc || null);
+      setHistory(initialEntry.content.history || []);
+    } else {
+      setDoc(null);
+      setHistory([]);
+    }
+    setSaved(false);
+  }, [initialEntry]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -26,6 +44,7 @@ export default function PDFQAWindow() {
     setUploadError("");
     setDoc(null);
     setHistory([]);
+    setSaved(false);
 
     try {
       const result = await uploadPDF(file);
@@ -43,6 +62,7 @@ export default function PDFQAWindow() {
 
     setAsking(true);
     setAskError("");
+    setSaved(false);
 
     try {
       const answer = await askPDF(q, doc);
@@ -59,8 +79,23 @@ export default function PDFQAWindow() {
     if (e.key === "Enter") handleAsk();
   }
 
+  async function handleSave() {
+    if (!doc || saving) return;
+    setSaving(true);
+    try {
+      const title = doc.filename || "PDF session";
+      await saveHistory("pdf", title, { doc, history });
+      setSaved(true);
+      onSaved?.();
+    } catch {
+      // best-effort
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col max-w-2xl mx-auto border border-slate-800 rounded-xl overflow-hidden">
+    <div className="flex flex-col max-w-2xl border border-slate-800 rounded-xl overflow-hidden">
       <div className="p-4 space-y-4">
         {!doc && (
           <div>
@@ -94,15 +129,24 @@ export default function PDFQAWindow() {
                 <span className="text-slate-300 font-medium">
                   📄 {doc.filename}
                 </span>
-                <button
-                  onClick={() => {
-                    setDoc(null);
-                    setHistory([]);
-                  }}
-                  className="text-xs text-amber-400 hover:text-amber-300"
-                >
-                  Upload different file
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="text-xs text-amber-400 hover:text-amber-300 disabled:opacity-50"
+                  >
+                    {saved ? "Saved" : saving ? "…" : "Save"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDoc(null);
+                      setHistory([]);
+                    }}
+                    className="text-xs text-amber-400 hover:text-amber-300"
+                  >
+                    Upload different file
+                  </button>
+                </div>
               </div>
               <p className="text-slate-500">{doc.page_count} pages</p>
               {doc.truncated && (

@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { uploadCSV, askCSV, CSVSummary } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { uploadCSV, askCSV, saveHistory, CSVSummary, HistoryDetail } from "@/lib/api";
 
 type QA = {
   question: string;
   answer: string;
 };
 
-export default function CSVQAWindow() {
+type Props = {
+  initialEntry?: HistoryDetail | null;
+  onSaved?: () => void;
+};
+
+export default function CSVQAWindow({ initialEntry, onSaved }: Props) {
   const [summary, setSummary] = useState<CSVSummary | null>(null);
   const [fileName, setFileName] = useState("");
   const [uploadError, setUploadError] = useState("");
@@ -18,6 +23,21 @@ export default function CSVQAWindow() {
   const [history, setHistory] = useState<QA[]>([]);
   const [asking, setAsking] = useState(false);
   const [askError, setAskError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (initialEntry && initialEntry.session_type === "csv") {
+      setSummary(initialEntry.content.summary || null);
+      setFileName(initialEntry.content.fileName || "");
+      setHistory(initialEntry.content.history || []);
+    } else {
+      setSummary(null);
+      setFileName("");
+      setHistory([]);
+    }
+    setSaved(false);
+  }, [initialEntry]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -27,6 +47,7 @@ export default function CSVQAWindow() {
     setUploadError("");
     setSummary(null);
     setHistory([]);
+    setSaved(false);
 
     try {
       const result = await uploadCSV(file);
@@ -45,6 +66,7 @@ export default function CSVQAWindow() {
 
     setAsking(true);
     setAskError("");
+    setSaved(false);
 
     try {
       const answer = await askCSV(q, summary);
@@ -61,8 +83,23 @@ export default function CSVQAWindow() {
     if (e.key === "Enter") handleAsk();
   }
 
+  async function handleSave() {
+    if (!summary || saving) return;
+    setSaving(true);
+    try {
+      const title = fileName || "CSV session";
+      await saveHistory("csv", title, { fileName, summary, history });
+      setSaved(true);
+      onSaved?.();
+    } catch {
+      // best-effort
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col max-w-2xl mx-auto border border-slate-800 rounded-xl overflow-hidden">
+    <div className="flex flex-col max-w-2xl border border-slate-800 rounded-xl overflow-hidden">
       <div className="p-4 space-y-4">
         {!summary && (
           <div>
@@ -94,16 +131,25 @@ export default function CSVQAWindow() {
                 <span className="text-slate-300 font-medium">
                   📄 {fileName}
                 </span>
-                <button
-                  onClick={() => {
-                    setSummary(null);
-                    setFileName("");
-                    setHistory([]);
-                  }}
-                  className="text-xs text-amber-400 hover:text-amber-300"
-                >
-                  Upload different file
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="text-xs text-amber-400 hover:text-amber-300 disabled:opacity-50"
+                  >
+                    {saved ? "Saved" : saving ? "…" : "Save"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSummary(null);
+                      setFileName("");
+                      setHistory([]);
+                    }}
+                    className="text-xs text-amber-400 hover:text-amber-300"
+                  >
+                    Upload different file
+                  </button>
+                </div>
               </div>
               <p className="text-slate-500">
                 {summary.row_count} rows · {summary.columns.length} columns

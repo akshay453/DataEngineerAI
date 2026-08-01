@@ -9,7 +9,8 @@ will build on top of.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import chat, code_generator, csv_qa, health, pdf_qa
+from app.database import Base, engine
+from app.routers import chat, code_generator, csv_qa, health, history, pdf_qa
 
 app = FastAPI(
     title="DataEngineer AI API",
@@ -27,11 +28,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+def create_tables():
+    # Creates tables if they don't exist yet. Fine for a project at
+    # this stage; a real production app would use Alembic migrations
+    # instead of auto-creating tables on every startup.
+    Base.metadata.create_all(bind=engine)
+
+
 app.include_router(health.router, prefix="/api/health", tags=["health"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(code_generator.router, prefix="/api/code", tags=["code"])
 app.include_router(csv_qa.router, prefix="/api/csv", tags=["csv"])
 app.include_router(pdf_qa.router, prefix="/api/pdf", tags=["pdf"])
+app.include_router(history.router, prefix="/api/history", tags=["history"])
 
 
 @app.get("/")
