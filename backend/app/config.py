@@ -9,12 +9,18 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    # "ollama" for local development, "groq" for the deployed public
+    # version (a personal laptop can't reliably serve 24/7 traffic).
+    AI_PROVIDER: str = "ollama"
+
     # URL of the AI server (Laptop 1, running Ollama).
-    # Example: http://192.168.1.20:11434
     AI_SERVER_URL: str = "http://localhost:11434"
 
     # Which model to ask Ollama for. Must match what you `ollama pull`ed.
     OLLAMA_MODEL: str = "qwen2.5"
+
+    # Groq API key, only needed when AI_PROVIDER=groq.
+    GROQ_API_KEY: str = ""
 
     # PostgreSQL connection string.
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/dataengineer_ai"
