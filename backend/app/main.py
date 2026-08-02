@@ -22,12 +22,12 @@ app = FastAPI(
 # Allow the Next.js dev server to call this API.
 # In production, replace "*" with your actual frontend origin.
 app.add_middleware(
-    
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "https://data-engineer-ai-nine.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+
 )
 @app.middleware("http")
 async def log_request_timing(request, call_next):
