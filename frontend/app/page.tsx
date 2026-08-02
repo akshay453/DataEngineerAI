@@ -5,10 +5,11 @@ import ChatWindow from "@/components/ChatWindow";
 import CodeGeneratorWindow from "@/components/CodeGeneratorWindow";
 import CSVQAWindow from "@/components/CSVQAWindow";
 import PDFQAWindow from "@/components/PDFQAWindow";
+import RAGWindow from "@/components/RAGWindow";
 import HistorySidebar from "@/components/HistorySidebar";
 import { getHistoryDetail, HistoryDetail } from "@/lib/api";
 
-type Mode = "chat" | "code" | "csv" | "pdf";
+type Mode = "chat" | "code" | "csv" | "pdf" | "rag";
 
 const icons: Record<Mode, JSX.Element> = {
   chat: (
@@ -34,6 +35,12 @@ const icons: Record<Mode, JSX.Element> = {
       <polyline points="14 2 14 8 20 8" />
     </svg>
   ),
+  rag: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <circle cx="11" cy="11" r="7" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
 };
 
 const tabs: { id: Mode; label: string }[] = [
@@ -41,6 +48,7 @@ const tabs: { id: Mode; label: string }[] = [
   { id: "code", label: "Code Generator" },
   { id: "csv", label: "CSV Q&A" },
   { id: "pdf", label: "PDF Q&A" },
+  { id: "rag", label: "RAG (Documents)" },
 ];
 
 export default function Home() {
@@ -140,6 +148,7 @@ export default function Home() {
           {mode === "pdf" && (
             <PDFQAWindow initialEntry={selectedEntry} onSaved={handleSaved} />
           )}
+          {mode === "rag" && <RAGWindow />}
         </div>
       </main>
     </div>

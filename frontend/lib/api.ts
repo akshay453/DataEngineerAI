@@ -199,4 +199,43 @@ export async function deleteHistory(id: number): Promise<void> {
   if (!res.ok) {
     throw new Error(`Failed to delete entry: ${res.status}`);
   }
+}export type RAGUpload = {
+  document_id: string;
+  filename: string;
+  chunk_count: number;
+};
+
+export async function uploadRAGDocument(file: File): Promise<RAGUpload> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE_URL}/api/rag/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.detail || `Upload failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function askRAG(
+  question: string,
+  documentId: string
+): Promise<{ answer: string; sources: string[] }> {
+  const res = await fetch(`${API_BASE_URL}/api/rag/ask`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question, document_id: documentId }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null);
+    throw new Error(errorData?.detail || `Question failed: ${res.status}`);
+  }
+
+  return res.json();
 }
