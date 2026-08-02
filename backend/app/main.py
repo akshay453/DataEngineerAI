@@ -49,6 +49,7 @@ app.include_router(health.router, prefix="/api/health", tags=["health"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(code_generator.router, prefix="/api/code", tags=["code"])
 app.include_router(csv_qa.router, prefix="/api/csv", tags=["csv"])
+app.include_router(pdf_qa.router, prefix="/api/pdf", tags=["pdf"])
 app.include_router(rag.router, prefix="/api/rag", tags=["rag"])
 app.include_router(history.router, prefix="/api/history", tags=["history"])
 
