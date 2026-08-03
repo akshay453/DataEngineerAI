@@ -57,6 +57,7 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
   const [loadError, setLoadError] = useState("");
+  const [sessionKey, setSessionKey] = useState(0);
 
   async function handleSelect(id: number) {
     setLoadError("");
@@ -65,6 +66,7 @@ export default function Home() {
       setSelectedEntry(entry);
       setSelectedId(id);
       setMode(entry.session_type);
+      setSessionKey((k) => k + 1);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Failed to load entry");
     }
@@ -73,12 +75,14 @@ export default function Home() {
   function handleNew() {
     setSelectedEntry(null);
     setSelectedId(null);
+    setSessionKey((k) => k + 1);
   }
 
   function handleTabChange(newMode: Mode) {
     setMode(newMode);
     setSelectedEntry(null);
     setSelectedId(null);
+    setSessionKey((k) => k + 1);
   }
 
   function handleSaved() {
@@ -137,18 +141,18 @@ export default function Home() {
           )}
 
           {mode === "chat" && (
-            <ChatWindow initialEntry={selectedEntry} onSaved={handleSaved} />
+            <ChatWindow key={sessionKey} initialEntry={selectedEntry} onSaved={handleSaved} />
           )}
           {mode === "code" && (
-            <CodeGeneratorWindow initialEntry={selectedEntry} onSaved={handleSaved} />
+            <CodeGeneratorWindow key={sessionKey} initialEntry={selectedEntry} onSaved={handleSaved} />
           )}
           {mode === "csv" && (
-            <CSVQAWindow initialEntry={selectedEntry} onSaved={handleSaved} />
+            <CSVQAWindow key={sessionKey} initialEntry={selectedEntry} onSaved={handleSaved} />
           )}
           {mode === "pdf" && (
-            <PDFQAWindow initialEntry={selectedEntry} onSaved={handleSaved} />
+            <PDFQAWindow key={sessionKey} initialEntry={selectedEntry} onSaved={handleSaved} />
           )}
-          {mode === "rag" && <RAGWindow />}
+          {mode === "rag" && <RAGWindow key={sessionKey} />}
         </div>
       </main>
     </div>
