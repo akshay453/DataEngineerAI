@@ -2,6 +2,8 @@
 // Keeping this here (instead of scattering fetch() calls in components)
 // means when the API shape changes, you only update it in one place.
 
+import { getClientId } from "./clientId";
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -95,6 +97,7 @@ export async function askCSV(
   const data = await res.json();
   return data.answer;
 }
+
 export type PDFUpload = {
   filename: string;
   page_count: number;
@@ -140,7 +143,9 @@ export async function askPDF(
 
   const data = await res.json();
   return data.answer;
-}export type SessionType = "chat" | "code" | "csv" | "pdf";
+}
+
+export type SessionType = "chat" | "code" | "csv" | "pdf";
 
 export type HistoryListItem = {
   id: number;
@@ -157,6 +162,10 @@ export type HistoryDetail = {
   created_at: string;
 };
 
+function clientIdHeaders(extra?: Record<string, string>): Record<string, string> {
+  return { "X-Client-Id": getClientId(), ...(extra || {}) };
+}
+
 export async function saveHistory(
   sessionType: SessionType,
   title: string,
@@ -164,7 +173,7 @@ export async function saveHistory(
 ): Promise<HistoryDetail> {
   const res = await fetch(`${API_BASE_URL}/api/history/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: clientIdHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ session_type: sessionType, title, content }),
   });
 
@@ -177,7 +186,9 @@ export async function saveHistory(
 }
 
 export async function listHistory(): Promise<HistoryListItem[]> {
-  const res = await fetch(`${API_BASE_URL}/api/history/`);
+  const res = await fetch(`${API_BASE_URL}/api/history/`, {
+    headers: clientIdHeaders(),
+  });
   if (!res.ok) {
     throw new Error(`Failed to load history: ${res.status}`);
   }
@@ -185,7 +196,9 @@ export async function listHistory(): Promise<HistoryListItem[]> {
 }
 
 export async function getHistoryDetail(id: number): Promise<HistoryDetail> {
-  const res = await fetch(`${API_BASE_URL}/api/history/${id}`);
+  const res = await fetch(`${API_BASE_URL}/api/history/${id}`, {
+    headers: clientIdHeaders(),
+  });
   if (!res.ok) {
     throw new Error(`Failed to load entry: ${res.status}`);
   }
@@ -195,11 +208,14 @@ export async function getHistoryDetail(id: number): Promise<HistoryDetail> {
 export async function deleteHistory(id: number): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/api/history/${id}`, {
     method: "DELETE",
+    headers: clientIdHeaders(),
   });
   if (!res.ok) {
     throw new Error(`Failed to delete entry: ${res.status}`);
   }
-}export type RAGUpload = {
+}
+
+export type RAGUpload = {
   document_id: string;
   filename: string;
   chunk_count: number;
