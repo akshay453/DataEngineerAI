@@ -26,18 +26,14 @@ export default function CSVQAWindow({ initialEntry, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
+ useEffect(() => {
     if (initialEntry && initialEntry.session_type === "csv") {
       setSummary(initialEntry.content.summary || null);
       setFileName(initialEntry.content.fileName || "");
       setHistory(initialEntry.content.history || []);
-    } else {
-      setSummary(null);
-      setFileName("");
-      setHistory([]);
     }
-    setSaved(false);
-  }, [initialEntry]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

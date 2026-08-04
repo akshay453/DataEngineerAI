@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { sendChatMessage, saveHistory, HistoryDetail } from "@/lib/api";
+import { sendChatMessage, saveHistory, HistoryDetail, PDFUpload } from "@/lib/api";
 
 type Message = {
   role: "user" | "assistant";
@@ -11,9 +11,16 @@ type Message = {
 type Props = {
   initialEntry?: HistoryDetail | null;
   onSaved?: () => void;
+  attachedDoc?: PDFUpload | null;
+  onClearAttachment?: () => void;
 };
 
-export default function ChatWindow({ initialEntry, onSaved }: Props) {
+export default function ChatWindow({
+  initialEntry,
+  onSaved,
+  attachedDoc,
+  onClearAttachment,
+}: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,11 +30,9 @@ export default function ChatWindow({ initialEntry, onSaved }: Props) {
   useEffect(() => {
     if (initialEntry && initialEntry.session_type === "chat") {
       setMessages(initialEntry.content.messages || []);
-    } else {
-      setMessages([]);
     }
-    setSaved(false);
-  }, [initialEntry]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSend() {
     const text = input.trim();
@@ -38,8 +43,13 @@ export default function ChatWindow({ initialEntry, onSaved }: Props) {
     setLoading(true);
     setSaved(false);
 
+    const promptToSend = attachedDoc
+      ? `Document "${attachedDoc.filename}" content:\n${attachedDoc.text}\n\n` +
+        `Using the document above as context where relevant, answer this: ${text}`
+      : text;
+
     try {
-      const reply = await sendChatMessage(text);
+      const reply = await sendChatMessage(promptToSend);
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
@@ -66,7 +76,7 @@ export default function ChatWindow({ initialEntry, onSaved }: Props) {
       setSaved(true);
       onSaved?.();
     } catch {
-      // best-effort; the button will just stay in its non-saved state
+      // best-effort
     } finally {
       setSaving(false);
     }
@@ -98,6 +108,20 @@ export default function ChatWindow({ initialEntry, onSaved }: Props) {
         ))}
         {loading && <div className="text-slate-500 text-sm">Thinking…</div>}
       </div>
+
+      {attachedDoc && (
+        <div className="border-t border-slate-800 px-3 py-2 flex items-center justify-between bg-slate-900/60">
+          <span className="text-xs text-slate-400">
+            📄 Referencing <span className="text-amber-400">{attachedDoc.filename}</span> from PDF Q&A
+          </span>
+          <button
+            onClick={onClearAttachment}
+            className="text-xs text-slate-500 hover:text-red-400"
+          >
+            Remove
+          </button>
+        </div>
+      )}
 
       <div className="border-t border-slate-800 p-3 flex gap-2">
         <input

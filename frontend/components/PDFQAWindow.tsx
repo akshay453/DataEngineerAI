@@ -11,9 +11,10 @@ type QA = {
 type Props = {
   initialEntry?: HistoryDetail | null;
   onSaved?: () => void;
+  onDocumentChange?: (doc: PDFUpload | null) => void;
 };
 
-export default function PDFQAWindow({ initialEntry, onSaved }: Props) {
+export default function PDFQAWindow({ initialEntry, onSaved, onDocumentChange }: Props) {
   const [doc, setDoc] = useState<PDFUpload | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -27,14 +28,13 @@ export default function PDFQAWindow({ initialEntry, onSaved }: Props) {
 
   useEffect(() => {
     if (initialEntry && initialEntry.session_type === "pdf") {
-      setDoc(initialEntry.content.doc || null);
+      const loadedDoc = initialEntry.content.doc || null;
+      setDoc(loadedDoc);
       setHistory(initialEntry.content.history || []);
-    } else {
-      setDoc(null);
-      setHistory([]);
+      if (loadedDoc) onDocumentChange?.(loadedDoc);
     }
-    setSaved(false);
-  }, [initialEntry]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -49,6 +49,7 @@ export default function PDFQAWindow({ initialEntry, onSaved }: Props) {
     try {
       const result = await uploadPDF(file);
       setDoc(result);
+      onDocumentChange?.(result);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -94,6 +95,12 @@ export default function PDFQAWindow({ initialEntry, onSaved }: Props) {
     }
   }
 
+  function handleUploadDifferent() {
+    setDoc(null);
+    setHistory([]);
+    onDocumentChange?.(null);
+  }
+
   return (
     <div className="flex flex-col max-w-2xl border border-slate-800 rounded-xl overflow-hidden">
       <div className="p-4 space-y-4">
@@ -102,6 +109,9 @@ export default function PDFQAWindow({ initialEntry, onSaved }: Props) {
             <label className="text-sm text-slate-400 mb-1 block">
               Upload a PDF file
             </label>
+            <p className="text-slate-600 text-xs mb-2">
+              Once uploaded, this document is also available as context in the Chat tab.
+            </p>
             <input
               type="file"
               accept=".pdf"
@@ -138,10 +148,7 @@ export default function PDFQAWindow({ initialEntry, onSaved }: Props) {
                     {saved ? "Saved" : saving ? "…" : "Save"}
                   </button>
                   <button
-                    onClick={() => {
-                      setDoc(null);
-                      setHistory([]);
-                    }}
+                    onClick={handleUploadDifferent}
                     className="text-xs text-amber-400 hover:text-amber-300"
                   >
                     Upload different file
@@ -149,6 +156,9 @@ export default function PDFQAWindow({ initialEntry, onSaved }: Props) {
                 </div>
               </div>
               <p className="text-slate-500">{doc.page_count} pages</p>
+              <p className="text-amber-400/80 text-xs mt-1">
+                Also available in Chat — go there and ask about this document.
+              </p>
               {doc.truncated && (
                 <p className="text-amber-400 mt-1">
                   ⚠️ This document is long — only the first portion was

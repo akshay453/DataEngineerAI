@@ -33,15 +33,9 @@ export default function CodeGeneratorWindow({ initialEntry, onSaved }: Props) {
       setRequest(initialEntry.content.request || "");
       setDbSchema(initialEntry.content.dbSchema || "");
       setCode(initialEntry.content.code || "");
-    } else {
-      setLanguage("sql");
-      setRequest("");
-      setDbSchema("");
-      setCode("");
     }
-    setError("");
-    setSaved(false);
-  }, [initialEntry]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleGenerate() {
     const text = request.trim();

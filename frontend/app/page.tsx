@@ -7,7 +7,7 @@ import CSVQAWindow from "@/components/CSVQAWindow";
 import PDFQAWindow from "@/components/PDFQAWindow";
 import RAGWindow from "@/components/RAGWindow";
 import HistorySidebar from "@/components/HistorySidebar";
-import { getHistoryDetail, HistoryDetail } from "@/lib/api";
+import { getHistoryDetail, HistoryDetail, PDFUpload } from "@/lib/api";
 
 type Mode = "chat" | "code" | "csv" | "pdf" | "rag";
 
@@ -51,13 +51,17 @@ const tabs: { id: Mode; label: string }[] = [
   { id: "rag", label: "RAG (Documents)" },
 ];
 
+const emptyKeys: Record<Mode, number> = { chat: 0, code: 0, csv: 0, pdf: 0, rag: 0 };
+
 export default function Home() {
   const [mode, setMode] = useState<Mode>("chat");
   const [selectedEntry, setSelectedEntry] = useState<HistoryDetail | null>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
   const [loadError, setLoadError] = useState("");
-  const [sessionKey, setSessionKey] = useState(0);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const [sessionKeys, setSessionKeys] = useState<Record<Mode, number>>(emptyKeys);
+  const [sharedPdfDoc, setSharedPdfDoc] = useState<PDFUpload | null>(null);
 
   async function handleSelect(id: number) {
     setLoadError("");
@@ -66,7 +70,10 @@ export default function Home() {
       setSelectedEntry(entry);
       setSelectedId(id);
       setMode(entry.session_type);
-      setSessionKey((k) => k + 1);
+      setSessionKeys((prev) => ({
+        ...prev,
+        [entry.session_type]: prev[entry.session_type] + 1,
+      }));
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Failed to load entry");
     }
@@ -75,14 +82,11 @@ export default function Home() {
   function handleNew() {
     setSelectedEntry(null);
     setSelectedId(null);
-    setSessionKey((k) => k + 1);
+    setSessionKeys((prev) => ({ ...prev, [mode]: prev[mode] + 1 }));
   }
 
   function handleTabChange(newMode: Mode) {
     setMode(newMode);
-    setSelectedEntry(null);
-    setSelectedId(null);
-    setSessionKey((k) => k + 1);
   }
 
   function handleSaved() {
@@ -140,19 +144,40 @@ export default function Home() {
             </div>
           )}
 
-          {mode === "chat" && (
-            <ChatWindow key={sessionKey} initialEntry={selectedEntry} onSaved={handleSaved} />
-          )}
-          {mode === "code" && (
-            <CodeGeneratorWindow key={sessionKey} initialEntry={selectedEntry} onSaved={handleSaved} />
-          )}
-          {mode === "csv" && (
-            <CSVQAWindow key={sessionKey} initialEntry={selectedEntry} onSaved={handleSaved} />
-          )}
-          {mode === "pdf" && (
-            <PDFQAWindow key={sessionKey} initialEntry={selectedEntry} onSaved={handleSaved} />
-          )}
-          {mode === "rag" && <RAGWindow key={sessionKey} />}
+          <div className={mode === "chat" ? "block" : "hidden"}>
+            <ChatWindow
+              key={sessionKeys.chat}
+              initialEntry={mode === "chat" ? selectedEntry : null}
+              onSaved={handleSaved}
+              attachedDoc={sharedPdfDoc}
+              onClearAttachment={() => setSharedPdfDoc(null)}
+            />
+          </div>
+          <div className={mode === "code" ? "block" : "hidden"}>
+            <CodeGeneratorWindow
+              key={sessionKeys.code}
+              initialEntry={mode === "code" ? selectedEntry : null}
+              onSaved={handleSaved}
+            />
+          </div>
+          <div className={mode === "csv" ? "block" : "hidden"}>
+            <CSVQAWindow
+              key={sessionKeys.csv}
+              initialEntry={mode === "csv" ? selectedEntry : null}
+              onSaved={handleSaved}
+            />
+          </div>
+          <div className={mode === "pdf" ? "block" : "hidden"}>
+            <PDFQAWindow
+              key={sessionKeys.pdf}
+              initialEntry={mode === "pdf" ? selectedEntry : null}
+              onSaved={handleSaved}
+              onDocumentChange={setSharedPdfDoc}
+            />
+          </div>
+          <div className={mode === "rag" ? "block" : "hidden"}>
+            <RAGWindow key={sessionKeys.rag} />
+          </div>
         </div>
       </main>
     </div>
