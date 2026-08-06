@@ -158,6 +158,8 @@ export default function Home() {
               key={sessionKeys.code}
               initialEntry={mode === "code" ? selectedEntry : null}
               onSaved={handleSaved}
+              attachedDoc={sharedPdfDoc}
+              onClearAttachment={() => setSharedPdfDoc(null)}
             />
           </div>
           <div className={mode === "csv" ? "block" : "hidden"}>

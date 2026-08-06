@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { generateCode, saveHistory, HistoryDetail } from "@/lib/api";
+import { generateCode, saveHistory, HistoryDetail, PDFUpload } from "@/lib/api";
 
 type Language = "sql" | "pyspark" | "airflow";
 
@@ -14,9 +14,16 @@ const PLACEHOLDERS: Record<Language, string> = {
 type Props = {
   initialEntry?: HistoryDetail | null;
   onSaved?: () => void;
+  attachedDoc?: PDFUpload | null;
+  onClearAttachment?: () => void;
 };
 
-export default function CodeGeneratorWindow({ initialEntry, onSaved }: Props) {
+export default function CodeGeneratorWindow({
+  initialEntry,
+  onSaved,
+  attachedDoc,
+  onClearAttachment,
+}: Props) {
   const [language, setLanguage] = useState<Language>("sql");
   const [request, setRequest] = useState("");
   const [dbSchema, setDbSchema] = useState("");
@@ -61,6 +68,13 @@ export default function CodeGeneratorWindow({ initialEntry, onSaved }: Props) {
     navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleInsertAttachment() {
+    if (!attachedDoc) return;
+    setDbSchema((prev) =>
+      prev.trim() ? `${prev}\n\n${attachedDoc.text}` : attachedDoc.text
+    );
   }
 
   async function handleSave() {
@@ -109,12 +123,22 @@ export default function CodeGeneratorWindow({ initialEntry, onSaved }: Props) {
         </div>
 
         <div>
-          <label className="text-sm text-slate-400 mb-1 block">
-            Schema{" "}
-            <span className="text-slate-600">
-              (optional — paste table/column names for accurate code)
-            </span>
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm text-slate-400">
+              Schema{" "}
+              <span className="text-slate-600">
+                (optional — paste table/column names, or raw notes from a document)
+              </span>
+            </label>
+            {attachedDoc && (
+              <button
+                onClick={handleInsertAttachment}
+                className="text-xs text-amber-400 hover:text-amber-300 whitespace-nowrap"
+              >
+                Insert {attachedDoc.filename}
+              </button>
+            )}
+          </div>
           <textarea
             className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-amber-500"
             placeholder={
@@ -124,6 +148,13 @@ export default function CodeGeneratorWindow({ initialEntry, onSaved }: Props) {
             value={dbSchema}
             onChange={(e) => setDbSchema(e.target.value)}
           />
+          {attachedDoc && (
+            <p className="text-xs text-slate-600 mt-1">
+              📄 {attachedDoc.filename} is available from PDF Q&A — click
+              "Insert" above to pull its text into the schema box, then edit
+              as needed before generating.
+            </p>
+          )}
         </div>
 
         <button
