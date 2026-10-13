@@ -60,7 +60,7 @@ def _call_groq(prompt: str) -> str:
             "https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
             json={
-                "model": "llama-3.1-8b-instant",
+               "model": "openai/gpt-oss-20b",
                 "messages": [{"role": "user", "content": prompt}],
             },
             timeout=30.0,
